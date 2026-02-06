@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NetSurf - Debug Console</title>
+    <style>
+        body {
+            background: #0a0e17;
+            color: #e0e6f0;
+            font-family: monospace;
+            padding: 20px;
+        }
+        .console {
+            background: #151b2b;
+            border: 1px solid #2a3548;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 600px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .log { color: #8891a8; }
+        .warn { color: #ffaa00; }
+        .error { color: #ff0055; }
+        .success { color: #00ff9d; }
+        button {
+            background: #00ff9d;
+            color: #0a0e17;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <h1>NetSurf Debug Console</h1>
+    
+    <div class="console" id="console"></div>
+    
+    <h2>Test Functions</h2>
+    <button onclick="testAPI()">Test API Status</button>
+    <button onclick="testTab()">Test Tab Switch</button>
+    <button onclick="testAlert()">Test Alert</button>
+    <button onclick="clearConsole()">Clear Console</button>
+    
+    <script>
+        const consoleEl = document.getElementById('console');
+        
+        // Override console.log
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const msg = args.join(' ');
+            const entry = document.createElement('div');
+            entry.className = 'log';
+            entry.textContent = '> ' + msg;
+            consoleEl.appendChild(entry);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        };
+        
+        console.error = function(...args) {
+            const msg = args.join(' ');
+            const entry = document.createElement('div');
+            entry.className = 'error';
+            entry.textContent = '✗ ' + msg;
+            consoleEl.appendChild(entry);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        };
+        
+        console.warn = function(...args) {
+            const msg = args.join(' ');
+            const entry = document.createElement('div');
+            entry.className = 'warn';
+            entry.textContent = '⚠ ' + msg;
+            consoleEl.appendChild(entry);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        };
+        
+        async function testAPI() {
+            console.log('Testing API...');
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/status');
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('✓ API is working');
+                    console.log(JSON.stringify(data, null, 2));
+                } else {
+                    console.error('API returned status:', res.status);
+                }
+            } catch (e) {
+                console.error('API error:', e.message);
+            }
+        }
+        
+        function testTab() {
+            console.log('Testing tab switching...');
+            // Open the main app in a new window
+            window.open('http://127.0.0.1:5000', '_blank');
+        }
+        
+        function testAlert() {
+            console.log('Alert test - check browser console for messages');
+            window.open('http://127.0.0.1:5000', '_blank');
+        }
+        
+        function clearConsole() {
+            consoleEl.innerHTML = '';
+            console.log('Console cleared');
+        }
+        
+        // Test on load
+        window.addEventListener('load', () => {
+            console.log('Debug console loaded');
+            console.log('Testing API connectivity...');
+            testAPI();
+        });
+    </script>
+</body>
+</html>
