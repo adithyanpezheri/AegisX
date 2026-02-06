@@ -1,0 +1,15 @@
+flask==3.0.0
+flask-cors==4.0.0
+flask-socketio==5.3.6
+python-socketio==5.10.0
+numpy==1.26.4
+pandas==2.2.0
+scikit-learn==1.4.1
+tensorflow==2.15.0
+matplotlib==3.8.3
+seaborn==0.13.1
+kafka-python==2.0.2
+scapy==2.5.0
+werkzeug==3.0.1
+python-engineio==4.8.0
+python-dotenv==1.0.0

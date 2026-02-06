@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetSurf - Network Intrusion Detection System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00ff9d;
+            --secondary: #0099ff;
+            --danger: #ff0055;
+            --warning: #ffaa00;
+            --bg-dark: #0a0e17;
+            --bg-card: #151b2b;
+            --bg-input: #1a2332;
+            --text-primary: #e0e6f0;
+            --text-secondary: #8891a8;
+            --border: #2a3548;
+            --glow: rgba(0, 255, 157, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Animated grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.15;
+            z-index: 0;
+            animation: gridMove 20s linear infinite;
+        }
+        
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+        
+        /* Glowing orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.2;
+            z-index: 0;
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            top: -200px;
+            left: -200px;
+        }
+        
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--secondary);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -10s;
+        }
+        
+        .orb-3 {
+            width: 350px;
+            height: 350px;
+            background: var(--danger);
+            top: 50%;
+            right: 10%;
+            animation-delay: -5s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: slideDown 0.8s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: 4px;
+            text-shadow: 0 0 40px var(--glow);
+            position: relative;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; width: 200px; }
+            50% { opacity: 1; width: 300px; }
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        /* Status Banner */
+        .status-banner {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 30px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1s ease 0.3s backwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            animation: blink 2s infinite;
+        }
+        
+        .status-indicator.active {
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border);
+            animation: fadeIn 1s ease 0.5s backwards;
+        }
+        
+        .tab {
+            padding: 15px 30px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+        }
+        
+        .tab::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+        
+        .tab:hover {
+            color: var(--primary);
+        }
+        
+        .tab.active {
+            color: var(--primary);
+        }
+        
+        .tab.active::after {
+            width: 100%;
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 10px 40px rgba(0, 255, 157, 0.1);
+        }
+        
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-title::before {
+            content: '▸';
+            color: var(--secondary);
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+        
+        input[type="file"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 255, 157, 0.1);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 8px;
+            color: var(--bg-dark);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 157, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            box-shadow: 0 5px 20px rgba(0, 255, 157, 0.2);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #cc0044);
+        }
+        
+        .btn-danger:hover {
+            box-shadow: 0 10px 30px rgba(255, 0, 85, 0.3);
+        }
+        
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        /* Results Display */
+        .results {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .results::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .results::-webkit-scrollbar-track {
+            background: var(--bg-card);
+        }
+        
+        .results::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        
+        .metric-value {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        /* Alert Box */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .alert-success {
+            background: rgba(0, 255, 157, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .alert-error {
+            background: rgba(255, 0, 85, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        
+        .alert-warning {
+            background: rgba(255, 170, 0, 0.1);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+        
+        /* Loading Spinner */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Model Cards */
+        .model-card {
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .model-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 157, 0.2);
+        }
+        
+        .model-card.selected {
+            border-color: var(--primary);
+            background: rgba(0, 255, 157, 0.05);
+        }
+        
+        .model-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .model-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        /* Live Feed */
+        .live-feed {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .feed-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--primary);
+            background: rgba(0, 255, 157, 0.05);
+            animation: slideIn 0.3s ease;
+        }
+        
+        .feed-item.anomaly {
+            border-left-color: var(--danger);
+            background: rgba(255, 0, 85, 0.05);
+        }
+        
+        .timestamp {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .status-banner {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                padding: 10px 20px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Chart Container */
+        .chart-container {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    
+    <div class="container">
+        <header>
+            <h1>NETSURF</h1>
+            <p class="subtitle">Network Intrusion Detection System</p>
+        </header>
+        
+        <div class="status-banner">
+            <div class="status-item">
+                <div class="status-indicator" id="systemStatus"></div>
+                <span>System: <strong id="systemText">Initializing...</strong></span>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="modelStatus"></div>
+                <span>Model: <strong id="modelText">No Model Loaded</strong></span>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="kafkaStatus"></div>
+                <span>Kafka: <strong id="kafkaText">Checking...</strong></span>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="captureStatus"></div>
+                <span>Live Capture: <strong id="captureText">Inactive</strong></span>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('training')">Training</button>
+            <button class="tab" onclick="switchTab('prediction')">Prediction</button>
+            <button class="tab" onclick="switchTab('live')">Live Capture</button>
+            <button class="tab" onclick="switchTab('models')">Saved Models</button>
+        </div>
+        
+        <!-- Training Tab -->
+        <div id="training" class="tab-content active">
+            <div class="card">
+                <h2 class="card-title">Train Detection Model</h2>
+                
+                <div class="form-group">
+                    <label>Upload Dataset (CSV)</label>
+                    <input type="file" id="trainFile" accept=".csv">
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Model Type</label>
+                    <div class="grid">
+                        <div class="model-card" onclick="selectModel('autoencoder')">
+                            <div class="model-name">Autoencoder</div>
+                            <div class="model-desc">Dense neural network for anomaly detection. Best for general-purpose intrusion detection.</div>
+                        </div>
+                        <div class="model-card" onclick="selectModel('lstm')">
+                            <div class="model-name">LSTM</div>
+                            <div class="model-desc">Sequence-based model capturing temporal patterns. Ideal for time-series attack detection.</div>
+                        </div>
+                        <div class="model-card" onclick="selectModel('isolation_forest')">
+                            <div class="model-name">Isolation Forest</div>
+                            <div class="model-desc">Fast tree-based anomaly detector. Excellent for high-speed real-time analysis.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="trainModel()">
+                    <span id="trainBtnText">Start Training</span>
+                </button>
+                
+                <div id="trainResults" class="results" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <!-- Prediction Tab -->
+        <div id="prediction" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Analyze Network Traffic</h2>
+                
+                <div class="form-group">
+                    <label>Upload Network Traffic Data (CSV)</label>
+                    <input type="file" id="predictFile" accept=".csv">
+                </div>
+                
+                <button class="btn" onclick="predictData()">
+                    <span id="predictBtnText">Analyze Traffic</span>
+                </button>
+                
+                <div id="predictResults" class="results" style="display: none;"></div>
+                
+                <div id="predictChart" class="chart-container" style="display: none;">
+                    <canvas id="predictionChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live Capture Tab -->
+        <div id="live" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <h2 class="card-title">Live Network Monitoring</h2>
+                    
+                    <div class="form-group">
+                        <label>Network Interface</label>
+                        <input type="text" id="networkInterface" value="eth0" placeholder="e.g., eth0, wlan0">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" onclick="startLiveCapture()">
+                            Start Monitoring
+                        </button>
+                        <button class="btn btn-danger" onclick="stopLiveCapture()">
+                            Stop Monitoring
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 class="card-title">Live Feed</h2>
+                    <div class="live-feed" id="liveFeed">
+                        <p style="color: var(--text-secondary); text-align: center; padding: 40px 0;">
+                            No active monitoring session
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Saved Models Tab -->
+        <div id="models" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">Model Management</h2>
+                
+                <div class="form-group">
+                    <label>Save Current Model</label>
+                    <input type="text" id="modelName" placeholder="Enter model name">
+                    <button class="btn" onclick="saveModel()" style="margin-top: 10px;">
+                        Save Model
+                    </button>
+                </div>
+                
+                <hr style="border: none; border-top: 1px solid var(--border); margin: 30px 0;">
+                
+                <div class="form-group">
+                    <label>Saved Models</label>
+                    <div id="modelsList" class="results">
+                        <p style="color: var(--text-secondary); text-align: center; padding: 20px;">
+                            Loading models...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js"></script>
+</html>
